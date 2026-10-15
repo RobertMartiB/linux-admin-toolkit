@@ -1,5 +1,11 @@
 #!/bin/bash
 
+#Si se lanza con "sh GestorSistema.sh" se ejecuta con dash i no con bash,
+#eso rompe cosas como &>/dev/null o [[ ]], asi que lo volvemos a lanzar con bash
+if [ -z "$BASH_VERSION" ]; then
+    exec bash "$0" "$@"
+fi
+
 # ─────────────────────────────────────────────
 #   Texto descriptivo:
 #   Choose an option  → texto del menú
@@ -37,7 +43,7 @@ PedirUsuarioExistente(){
         return 1
     fi
 
-    if ! id "$Usuario" &>/dev/null; then
+    if ! id "$Usuario" >/dev/null 2>&1; then
         whiptail --title "$1" \
             --msgbox "El usuario '$Usuario' no existe, por favor prueba con otro." 8 60
         return 1
@@ -54,7 +60,7 @@ CrearUsuario(){
         return
     fi
 
-    if id "$Username" &>/dev/null; then
+    if id "$Username" >/dev/null 2>&1; then
         whiptail --title "Error" --msgbox "El usuario '$Username' ya existe." 8 50
         return
     fi
@@ -197,9 +203,9 @@ ComprobarUsuarioBloqueable(){
 
 CancelarTemporizador(){
     #Si el usuario tenia un bloqueo o desbloqueo temporal pendiente lo quitamos
-    sudo systemctl stop "estado-usuario-$Usuario.timer" &>/dev/null
-    sudo systemctl stop "estado-usuario-$Usuario.service" &>/dev/null
-    sudo systemctl reset-failed "estado-usuario-$Usuario.service" &>/dev/null
+    sudo systemctl stop "estado-usuario-$Usuario.timer" >/dev/null 2>&1
+    sudo systemctl stop "estado-usuario-$Usuario.service" >/dev/null 2>&1
+    sudo systemctl reset-failed "estado-usuario-$Usuario.service" >/dev/null 2>&1
 }
 
 ProgramarTemporizador(){
