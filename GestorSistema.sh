@@ -16,6 +16,78 @@ fi
 
 
 # ══════════════════════════════════════════════
+#   COLORES
+# ══════════════════════════════════════════════
+
+#whiptail coje los colores de la variable NEWT_COLORS (formato: elemento=letra,fondo)
+#Si el terminal tiene 256 colores podemos usar colorN (N de 0 a 255), tabla de colores:
+#https://upload.wikimedia.org/wikipedia/commons/1/15/Xterm_256color_chart.svg
+#   color17  → azul noche (fondo de detras)     color234 → casi negro (ventana)
+#   color51  → cian neon (bordes, seleccion)    color201 → magenta neon (titulos, boton activo)
+#   color87  → aguamarina (subtitulos)          color252 → gris claro (opciones)
+#   color238 → gris oscuro (botones, cajas de texto)
+if [ "$(tput colors 2>/dev/null)" -ge 256 ] 2>/dev/null; then
+    export NEWT_COLORS='
+    root=color51,color17
+    roottext=color51,color17
+    shadow=color16,color16
+    window=color252,color234
+    border=color51,color234
+    title=color201,color234
+    textbox=color87,color234
+    acttextbox=color16,color51
+    label=color87,color234
+    listbox=color252,color234
+    actlistbox=color252,color234
+    sellistbox=color51,color236
+    actsellistbox=color16,color51
+    button=color16,color201
+    actbutton=color16,color201
+    compactbutton=color255,color238
+    checkbox=color252,color234
+    actcheckbox=color16,color51
+    entry=color255,color238
+    disentry=color240,color234
+    emptyscale=,color238
+    fullscale=,color51
+    helpline=color51,color17
+    '
+else
+    #Terminal de solo 8 colores: black red green brown blue magenta cyan lightgray
+    export NEWT_COLORS='
+    root=cyan,blue
+    roottext=cyan,blue
+    shadow=black,black
+    window=lightgray,black
+    border=cyan,black
+    title=magenta,black
+    textbox=cyan,black
+    label=cyan,black
+    listbox=lightgray,black
+    actlistbox=lightgray,black
+    sellistbox=cyan,black
+    actsellistbox=black,cyan
+    button=black,magenta
+    actbutton=black,magenta
+    compactbutton=black,lightgray
+    entry=black,lightgray
+    disentry=lightgray,black
+    emptyscale=,black
+    fullscale=,cyan
+    helpline=cyan,blue
+    '
+fi
+
+#Cabecera que sale arriba del todo en todas las pantallas
+Cabecera="◢◤  LINUX ADMIN TOOLKIT  ◢◤     ${SUDO_USER:-$USER}@$(hostname)     $(date '+%d/%m/%Y')"
+
+whiptail(){
+    #Asi no hace falta poner --backtitle en cada whiptail del script
+    command whiptail --backtitle "$Cabecera" "$@"
+}
+
+
+# ══════════════════════════════════════════════
 #   USUARIOS
 # ══════════════════════════════════════════════
 
@@ -118,13 +190,22 @@ ListarTodosLosUsuarios(){
 }
 
 MenuListarUsuarios(){
+    while true; do
    Opcion=$(whiptail --title "Listar usuarios" \
-	--menu "Escoge una de las opciones siguientes" 25 78 16 \
+	--menu "Escoge una de las opciones siguientes" 17 78 7 \
 	"Usuarios reales" 		"Cuentas creadas para el usuario" \
+	"" "" \
 	"Usuarios del sistema" 		"Cuentas de servicios del SO" \
+	"" "" \
 	"Todos los usuarios"		"Listado de todos los usuarios" \
-	"Salir" "Salir" \
+	"" "" \
+	"Salir" "Volver al menu de usuarios" \
 	3>&1 1>&2 2>&3)
+
+        #Si se pulsa Esc o Cancelar volvemos al menu de usuarios
+        if [ $? -ne 0 ]; then
+            return
+        fi
 
        case $Opcion in
 	  "Usuarios reales") ListarUsuariosReales ;;
@@ -134,8 +215,11 @@ MenuListarUsuarios(){
 	  "Todos los usuarios") ListarTodosLosUsuarios ;;
 		#comando para mostrar toods los usuarios del sistema ya sean reales o parte del SO
 	  "Salir") return ;;
-		#salir al menu principal
+		#salir al menu de usuarios
+	  *) continue ;;
+		#si se escoje una linea en blanco volvemos a mostrar el menu
        esac
+    done
 }
 
 EliminarUsuario(){
@@ -279,68 +363,108 @@ DesbloqueoPermanente(){
 
 MenuBloqueoUsuario(){
     #Esto lo usaremos para poner un menu donde podremos poner bloqueo temporal o total
-    opcionBloqueo=$(whiptail --title "Opcion de bloqueo" \
-        --menu "Escoge el tipo de bloqueo" 25 78 16 \
-        "Bloqueo temporal"      "Bloquear durante unos dias" \
-        "Bloqueo permanente"    "Bloquear hasta desbloquearlo a mano" \
-        "Salir"                 "Volver atras" \
-        3>&1 1>&2 2>&3)
+    while true; do
+        opcionBloqueo=$(whiptail --title "Opcion de bloqueo" \
+            --menu "Escoge el tipo de bloqueo" 15 78 5 \
+            "Bloqueo temporal"      "Bloquear durante unos dias" \
+            "" "" \
+            "Bloqueo permanente"    "Bloquear hasta desbloquearlo a mano" \
+            "" "" \
+            "Salir"                 "Volver atras" \
+            3>&1 1>&2 2>&3)
 
-    case $opcionBloqueo in
-        "Bloqueo temporal")     BloqueoTemporal ;;
-            #bloquea al usuario i lo desbloquea solo pasados X dias
-        "Bloqueo permanente")   BloqueoPermanente ;;
-            #bloquea al usuario hasta que el administrador lo desbloquee
-        "Salir")                return ;;
-    esac
+        #Si se pulsa Esc o Cancelar volvemos atras
+        if [ $? -ne 0 ]; then
+            return
+        fi
+
+        case $opcionBloqueo in
+            "Bloqueo temporal")     BloqueoTemporal ;;
+                #bloquea al usuario i lo desbloquea solo pasados X dias
+            "Bloqueo permanente")   BloqueoPermanente ;;
+                #bloquea al usuario hasta que el administrador lo desbloquee
+            "Salir")                return ;;
+            *)                      continue ;;
+                #si se escoje una linea en blanco volvemos a mostrar el menu
+        esac
+    done
 }
 
 MenuDesbloqueoUsuario(){
     #Esto lo usaremos para poner un menu donde podremos poner desbloqueo temporal o total
-    opcionDesbloqueo=$(whiptail --title "Opcion de desbloqueo" \
-        --menu "Escoge el tipo de desbloqueo" 25 78 16 \
-        "Desbloqueo temporal"   "Desbloquear durante unos dias" \
-        "Desbloqueo permanente" "Desbloquear definitivamente" \
-        "Salir"                 "Volver atras" \
-        3>&1 1>&2 2>&3)
+    while true; do
+        opcionDesbloqueo=$(whiptail --title "Opcion de desbloqueo" \
+            --menu "Escoge el tipo de desbloqueo" 15 78 5 \
+            "Desbloqueo temporal"   "Desbloquear durante unos dias" \
+            "" "" \
+            "Desbloqueo permanente" "Desbloquear definitivamente" \
+            "" "" \
+            "Salir"                 "Volver atras" \
+            3>&1 1>&2 2>&3)
 
-    case $opcionDesbloqueo in
-        "Desbloqueo temporal")   DesbloqueoTemporal ;;
-            #desbloquea al usuario i lo vuelve a bloquear pasados X dias
-        "Desbloqueo permanente") DesbloqueoPermanente ;;
-            #desbloquea al usuario i quita cualquier temporizador pendiente
-        "Salir")                 return ;;
-    esac
+        #Si se pulsa Esc o Cancelar volvemos atras
+        if [ $? -ne 0 ]; then
+            return
+        fi
+
+        case $opcionDesbloqueo in
+            "Desbloqueo temporal")   DesbloqueoTemporal ;;
+                #desbloquea al usuario i lo vuelve a bloquear pasados X dias
+            "Desbloqueo permanente") DesbloqueoPermanente ;;
+                #desbloquea al usuario i quita cualquier temporizador pendiente
+            "Salir")                 return ;;
+            *)                       continue ;;
+                #si se escoje una linea en blanco volvemos a mostrar el menu
+        esac
+    done
 }
 
 MenuEstadoUsuarios(){
     #Esta funcion nos sirve para saber si el usuario quiere bloquear o desbloquear un usuario
     #a parte podremos llamar a la funcion pertinente
-    opcionEstado=$(whiptail --title "Opciones Estado" \
-        --menu "Escoge una de las opciones" 25 78 16 \
-        "Bloquear usuario"      "Bloqueo temporal o permanente" \
-        "Desbloquear usuario"   "Desbloqueo temporal o permanente" \
-        "Salir"                 "Volver al menu de usuarios" \
-        3>&1 1>&2 2>&3)
+    while true; do
+        opcionEstado=$(whiptail --title "Opciones Estado" \
+            --menu "Escoge una de las opciones" 15 78 5 \
+            "Bloquear usuario"      "Bloqueo temporal o permanente" \
+            "" "" \
+            "Desbloquear usuario"   "Desbloqueo temporal o permanente" \
+            "" "" \
+            "Salir"                 "Volver al menu de usuarios" \
+            3>&1 1>&2 2>&3)
 
-    case $opcionEstado in
-        "Bloquear usuario")     MenuBloqueoUsuario ;;
-        "Desbloquear usuario")  MenuDesbloqueoUsuario ;;
-        "Salir")                return ;;
-    esac
+        #Si se pulsa Esc o Cancelar volvemos al menu de usuarios
+        if [ $? -ne 0 ]; then
+            return
+        fi
+
+        case $opcionEstado in
+            "Bloquear usuario")     MenuBloqueoUsuario ;;
+            "Desbloquear usuario")  MenuDesbloqueoUsuario ;;
+            "Salir")                return ;;
+            *)                      continue ;;
+                #si se escoje una linea en blanco volvemos a mostrar el menu
+        esac
+    done
 }
 
 MenuUsuarios() {
     while true; do
         opcion=$(whiptail --title "Menu administrar usuarios" \
-            --menu "Escoge una de las opciones" 25 78 16 \
+            --menu "Escoge una de las opciones" 25 78 15 \
             "Crear usuario"       "Crear un nuevo usuario" \
+            "" "" \
             "Eliminar usuario"    "Eliminar un usuario existente" \
+            "" "" \
             "Editar permisos"     "Editar permisos de un usuario" \
+            "" "" \
             "Listar usuarios"     "Listar todos los usuarios" \
+            "" "" \
             "Bloquear y desbloquear usuarios"    "Bloquear o desbloquear una cuenta" \
+            "" "" \
             "Cambiar contrasena"  "Cambiar la contraseña" \
+            "" "" \
             "Gestion sudoers"     "Gestionar permisos de sudo" \
+            "" "" \
             "Salir"               "Volver al menú principal" \
             3>&1 1>&2 2>&3)
 
@@ -371,16 +495,25 @@ MenuUsuarios() {
 
 while true; do
     opcion=$(whiptail --title "Menu principal" \
-        --menu "Choose an option" 25 78 16 \
+        --menu "Choose an option" 28 78 19 \
         "Usuarios"              "Gestión de Usuarios" \
+        "" "" \
         "Grupos"                "Gestión de Grupos" \
+        "" "" \
         "Monotorizacion"        "Monitorización del Sistema" \
+        "" "" \
         "Firewall"              "Firewall (UFW)" \
+        "" "" \
         "Red"                   "Configuración de Red" \
+        "" "" \
         "Servicios"             "Servicios y Procesos" \
+        "" "" \
         "Instalacion programas" "Paquetes y Sistema" \
+        "" "" \
         "Copias de seguridad"   "Gestion de las copias de seguridad" \
+        "" "" \
         "Seguridad"             "Seguridad y Auditoría" \
+        "" "" \
         "Salir"                 "Salir" \
         3>&1 1>&2 2>&3)
 
