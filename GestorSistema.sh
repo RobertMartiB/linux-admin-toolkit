@@ -38,7 +38,7 @@ if [ "$(tput colors 2>/dev/null)" -ge 256 ] 2>/dev/null; then
     acttextbox=color16,color51
     label=color87,color234
     listbox=color252,color234
-    actlistbox=color252,color234
+     actlistbox=color252,color234
     sellistbox=color51,color236
     actsellistbox=color16,color51
     button=color16,color201
@@ -276,6 +276,51 @@ PedirDias(){
     done
 }
 
+PedirDatosPassword() {
+    while true; do
+        User=$(whiptail --title "Cambiar contraseña" \
+            --inputbox "¿A qué usuario quieres cambiar la contraseña?" 8 45 "" \
+            3>&1 1>&2 2>&3)
+
+        if [ $? -ne 0 ]; then
+            return 1
+        fi
+
+        if ! id "$User" >/dev/null 2>&1; then
+            whiptail --title "Error" --msgbox "Este usuario no existe" 8 50
+            continue          # ← solo repetir el bucle, NO llamar a CambiarContrasenya
+        else
+            break
+        fi
+    done
+}
+
+CambiarContrasenya() {
+    PedirDatosPassword || return
+
+    contrasenya=$(whiptail --title "Nueva contraseña" \
+        --passwordbox "Ingrese la nueva contraseña" 8 45 \
+        3>&1 1>&2 2>&3)       # ← --passwordbox, no --inputbox
+
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+
+    # Confirmación
+    contrasenya2=$(whiptail --title "Confirmar" \
+        --passwordbox "Confirme la nueva contraseña" 8 45 \
+        3>&1 1>&2 2>&3)
+
+    if [ "$contrasenya" != "$contrasenya2" ]; then
+        whiptail --title "Error" --msgbox "Las contraseñas no coinciden" 8 50
+        return 1
+    fi
+
+    echo "$User:$contrasenya" | sudo chpasswd
+}
+
+#COMPROBACIONES DEL BLOQUEO DE USUARIOS
+
 ComprobarUsuarioBloqueable(){
     #Evita bloquear root o al propio administrador que esta usando el script
     if [ "$Usuario" = "root" ] || [ "$Usuario" = "${SUDO_USER:-$USER}" ]; then
@@ -361,6 +406,38 @@ DesbloqueoPermanente(){
     fi
 }
 
+#GestionSudoers(){
+#}
+
+MenuGestionSudoers(){
+    while true; do
+        opcionGestion=$(whiptail --title "Opciones gestion sudoers" \
+            --menu "Escoge una de las siguientes opciones" 17 78 7 \
+            "Listar usuarios con sudo"  "Se listan los usuarios con permiso sudo" \
+            "" "" \
+            "Añadir usuario a sudo"     "Agregamos permiso sudo a un usuario" \
+            "" "" \
+            "Quitar usuario de sudo"    "Quitamos permiso sudo a un usuario" \
+            "" "" \
+            "Salir"                     "Volver al menu anterior" \
+            3>&1 1>&2 2>&3)
+
+        #Si se pulsa Esc o Cancelar volvemos al menu anterior
+        if [ $? -ne 0 ]; then
+            return
+        fi
+
+        case $opcionGestion in
+            "Listar usuarios con sudo") ListarSudoers ;;
+            "Añadir usuario a sudo")    AnadirSudoers ;;
+            "Quitar usuario de sudo")   QuitarSudoers ;;
+            "Salir")                    return ;;
+            *)                          continue ;;
+        esac
+    done
+}
+
+
 MenuBloqueoUsuario(){
     #Esto lo usaremos para poner un menu donde podremos poner bloqueo temporal o total
     while true; do
@@ -424,7 +501,7 @@ MenuEstadoUsuarios(){
     #a parte podremos llamar a la funcion pertinente
     while true; do
         opcionEstado=$(whiptail --title "Opciones Estado" \
-            --menu "Escoge una de las opciones" 15 78 5 \
+            --menu "Escoge una de las opciones" 16 78 7 \
             "Bloquear usuario"      "Bloqueo temporal o permanente" \
             "" "" \
             "Desbloquear usuario"   "Desbloqueo temporal o permanente" \
@@ -482,7 +559,7 @@ MenuUsuarios() {
             "Listar usuarios")     MenuListarUsuarios ;;
             "Bloquear y desbloquear usuarios")    MenuEstadoUsuarios ;;
             "Cambiar contrasena")  CambiarContrasenya ;;
-            "Gestion sudoers")     GestionSudoers ;;
+            "Gestion sudoers")     MenuGestionSudoers;;
             "Salir")               return ;;
         esac
     done
