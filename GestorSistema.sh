@@ -380,6 +380,9 @@ DesbloqueoTemporal(){
     PedirDias "Desbloqueo temporal" || return
 
     CancelarTemporizador
+     #Este comando lista los usuarios reales i quita el usuarios nobody i los guarda en una varable
+        usuarios=$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd)
+
 
     if sudo usermod -U -e "" "$Usuario" && ProgramarTemporizador -L -e 1; then
         fecha=$(date -d "+$Dias days" "+%d/%m/%Y %H:%M")
@@ -405,9 +408,31 @@ DesbloqueoPermanente(){
             --msgbox "No se ha podido desbloquear a '$Usuario'.\nSi no tiene contraseña ponle una primero." 8 60
     fi
 }
+AñadirSudoersMenu(){
+    while true; do
+        opcionGestion=$(whiptail --title "Opciones gestión sudoers" \
+            --menu "Escoge una de las siguientes opciones" 17 78 7 \
+            "Dar permisos a un usuario no existente" "crear" \
+            "Dar permisos a un usuario existente" "existente" \
+            "Salir" "salir" \
+            3>&1 1>&2 2>&3)
 
-#GestionSudoers(){
-#}
+	        if [ $? -ne 0 ]; then
+        	    return
+	        fi
+
+  case "$opcionGestion" in
+            "crear")     CrearUsuarioSudoers ;;
+            "existente") DarPermisoExistente ;;
+            "salir")     return ;;
+        esac
+    done
+}
+
+ListarSudoers(){
+	usuarios=$(getent group sudo | awk -F: '{split($4, u, ","); for (i in u) print u[i]}')
+	whiptail --title "Listado usuarios sudoers" --scrolltext --msgbox "$usuarios" 20 60   
+}
 
 MenuGestionSudoers(){
     while true; do
