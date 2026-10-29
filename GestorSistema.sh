@@ -129,12 +129,12 @@ CrearUsuario(){
 
     if [ $exitstatus -ne 0 ] || [ -z "$Username" ]; then
         whiptail --title "Error" --msgbox "Operación cancelada." 8 50
-        return
+        return 1
     fi
 
     if id "$Username" >/dev/null 2>&1; then
         whiptail --title "Error" --msgbox "El usuario '$Username' ya existe." 8 50
-        return
+        return 1
     fi
 
     while true; do
@@ -144,7 +144,7 @@ CrearUsuario(){
 
         if [ $exitstatus -ne 0 ]; then
             whiptail --title "Error" --msgbox "Operación cancelada." 8 50
-            return
+            return 1
         fi
 
         if [ ${#Password} -lt 8 ]; then
@@ -154,7 +154,7 @@ CrearUsuario(){
             if ! sudo useradd -m -s /bin/bash "$Username"; then
                 whiptail --title "Error" \
                     --msgbox "No se ha podido crear el usuario '$Username'.\nRevisa que el nombre sea valido." 8 60
-                return
+                return 1
             fi
             echo "${Username}:${Password}" | sudo chpasswd
             whiptail --title "Creacion usuario" \
@@ -408,29 +408,94 @@ DesbloqueoPermanente(){
             --msgbox "No se ha podido desbloquear a '$Usuario'.\nSi no tiene contraseña ponle una primero." 8 60
     fi
 }
-AñadirSudoersMenu(){
+TieneSudo(){
+    #Devuelve 0 si el usuario esta en el grupo sudo
+    id -nG "$1" 2>/dev/null | tr ' ' '\n' | grep -qx sudo
+}
+
+AnadirSudoers(){
     while true; do
-        opcionGestion=$(whiptail --title "Opciones gestión sudoers" \
-            --menu "Escoge una de las siguientes opciones" 17 78 7 \
-            "Dar permisos a un usuario no existente" "crear" \
-            "Dar permisos a un usuario existente" "existente" \
-            "Salir" "salir" \
+        opcionGestion=$(whiptail --title "Añadir usuario a sudo" \
+            --menu "Escoge una de las siguientes opciones" 15 78 4 \
+            "Usuario nuevo"      "Crear un usuario nuevo con permiso sudo" \
+            "Usuario existente"  "Dar permiso sudo a un usuario que ya existe" \
+            "Salir"              "Volver al menu anterior" \
             3>&1 1>&2 2>&3)
 
-	        if [ $? -ne 0 ]; then
-        	    return
-	        fi
+        if [ $? -ne 0 ]; then
+            return
+        fi
 
-  case "$opcionGestion" in
-            "crear")     CrearUsuarioSudoers ;;
-            "existente") DarPermisoExistente ;;
-            "salir")     return ;;
+        case "$opcionGestion" in
+            "Usuario nuevo")     CrearUsuarioSudoers ;;
+            "Usuario existente") DarPermisoExistente ;;
+            "Salir")             return ;;
         esac
     done
 }
 
+CrearUsuarioSudoers(){
+    CrearUsuario || return
+
+    if sudo usermod -aG sudo "$Username"; then
+        whiptail --title "Añadir usuario a sudo" \
+            --msgbox "El usuario '$Username' ya tiene permisos de sudo." 8 60
+    else
+        whiptail --title "Error" \
+            --msgbox "Se ha creado '$Username' pero no se le ha podido dar sudo." 8 60
+    fi
+}
+
+DarPermisoExistente(){
+    PedirUsuarioExistente "Añadir usuario a sudo" || return
+
+    if TieneSudo "$Usuario"; then
+        whiptail --title "Añadir usuario a sudo" \
+            --msgbox "El usuario '$Usuario' ya tenia permisos de sudo." 8 60
+        return
+    fi
+
+    if sudo usermod -aG sudo "$Usuario"; then
+        whiptail --title "Añadir usuario a sudo" \
+            --msgbox "Permiso sudo añadido a '$Usuario'.\nSe aplica la proxima vez que inicie sesion." 9 60
+    else
+        whiptail --title "Error" --msgbox "No se ha podido dar sudo a '$Usuario'." 8 60
+    fi
+}
+
+QuitarSudoers(){
+    PedirUsuarioExistente "Quitar usuario de sudo" || return
+
+    #No dejamos quitar sudo a root ni al administrador que usa el script (se quedaria sin acceso)
+    if [ "$Usuario" = "root" ] || [ "$Usuario" = "${SUDO_USER:-$USER}" ]; then
+        whiptail --title "Error" \
+            --msgbox "No puedes quitar el permiso sudo a '$Usuario' desde aqui." 8 60
+        return
+    fi
+
+    if ! TieneSudo "$Usuario"; then
+        whiptail --title "Quitar usuario de sudo" \
+            --msgbox "El usuario '$Usuario' no tiene permisos de sudo." 8 60
+        return
+    fi
+
+    if ! whiptail --title "Quitar usuario de sudo" \
+        --yesno "¿Seguro que quieres quitar el permiso sudo a '$Usuario'?" 8 60; then
+        whiptail --title "Quitar usuario de sudo" --msgbox "Operación cancelada." 8 50
+        return
+    fi
+
+    if sudo gpasswd -d "$Usuario" sudo >/dev/null; then
+        whiptail --title "Quitar usuario de sudo" \
+            --msgbox "Permiso sudo quitado a '$Usuario'." 8 60
+    else
+        whiptail --title "Error" --msgbox "No se ha podido quitar sudo a '$Usuario'." 8 60
+    fi
+}
+
 ListarSudoers(){
 	usuarios=$(getent group sudo | awk -F: '{split($4, u, ","); for (i in u) print u[i]}')
+	[ -z "$usuarios" ] && usuarios="Ningun usuario tiene permisos de sudo."
 	whiptail --title "Listado usuarios sudoers" --scrolltext --msgbox "$usuarios" 20 60   
 }
 

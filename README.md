@@ -18,9 +18,17 @@ Herramienta en **Bash** para administrar servidores Linux desde **menús en la t
 - **Crear usuarios** con carpeta personal y shell Bash, comprobando que el nombre no exista y que la contraseña tenga al menos 8 caracteres.
 - **Eliminar usuarios** junto con su carpeta personal, con confirmación previa. No deja borrar `root`.
 - **Listar usuarios**: reales (UID ≥ 1000), de sistema (UID < 1000) o todos.
+- **Cambiar contraseñas** de cualquier usuario: comprueba que el usuario exista y pide la nueva contraseña dos veces, sin mostrarla, para evitar errores al escribirla.
 - **Bloquear y desbloquear cuentas**, de forma permanente o **temporal durante X días**.
   - El bloqueo desactiva la contraseña y caduca la cuenta, así que tampoco se puede entrar por SSH con clave.
   - No permite bloquear a `root` ni al administrador que está usando la herramienta.
+
+**Gestión de `sudoers`**
+
+- **Ver qué usuarios tienen sudo** (miembros del grupo `sudo`).
+- **Dar permisos de sudo** a un usuario que ya existe, o **crear un usuario nuevo** directamente con sudo.
+- **Quitar permisos de sudo**, con confirmación previa.
+  - No deja quitar sudo a `root` ni al administrador que está usando la herramienta, para no quedarse sin acceso.
 
 **Interfaz**
 
@@ -46,8 +54,6 @@ Cada usuario tiene una sola unidad `estado-usuario-<usuario>`. Si se cambia de i
 ## En desarrollo
 
 - [ ] Editar permisos de usuarios
-- [ ] Cambiar contraseñas
-- [ ] Gestión de `sudoers`
 - [ ] Gestión de grupos
 - [ ] Monitorización del sistema
 - [ ] Firewall (UFW)
