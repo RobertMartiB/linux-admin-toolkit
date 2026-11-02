@@ -512,7 +512,7 @@ MenuGestionSudoers(){
             "Salir"                     "Volver al menu anterior" \
             3>&1 1>&2 2>&3)
 
-        #Si se pulsa Esc o Cancelar volvemos al menu anterior
+        #Si cancela volvemos atras
         if [ $? -ne 0 ]; then
             return
         fi
@@ -660,14 +660,14 @@ MenuUsuarios() {
 #  GRUPOS
 #=============================================
 
-MenuGrupos(){
-	while true; do 
-	    opcion=$(whiptail --title "Menu administracion de grupos" \
-		--menu "Escoje una de las siguientes opciones" 25 78 15 \
-		
-
-)
-}
+#MenuGrupos(){
+#	while true; do 
+#	    opcion=$(whiptail --title "Menu administracion de grupos" \
+#		--menu "Escoje una de las siguientes opciones" 25 78 15 \
+#		
+#
+#)
+#}
 
 
 
