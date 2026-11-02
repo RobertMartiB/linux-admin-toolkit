@@ -1,141 +1,144 @@
 <h1 align="center">linux-admin-toolkit</h1>
 
 <p align="center">
-  <b>Administra un servidor Linux desde menús en la terminal.</b><br>
-  Usuarios, contraseñas, bloqueos y permisos de sudo sin tener que recordar cada comando.
+  <b>Manage a Linux server from menus in your terminal.</b><br>
+  Users, passwords, account locks and sudo permissions, without having to remember every command.
 </p>
 
 <p align="center">
+  <b>English</b> · <a href="README.es.md">Español</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/RobertMartiB/linux-admin-toolkit/actions/workflows/shellcheck.yml"><img src="https://github.com/RobertMartiB/linux-admin-toolkit/actions/workflows/shellcheck.yml/badge.svg" alt="ShellCheck"></a>
   <img src="https://img.shields.io/badge/Bash-4EAA25?logo=gnubash&logoColor=white" alt="Bash">
   <img src="https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black" alt="Linux">
-  <img src="https://img.shields.io/badge/estado-en%20desarrollo-orange" alt="Estado">
-  <img src="https://img.shields.io/badge/licencia-MIT-blue" alt="Licencia">
+  <img src="https://img.shields.io/badge/status-in%20development-orange" alt="Status">
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="License">
 </p>
 
 <p align="center">
-  <img src="assets/banner.png" width="820" alt="Menú principal de linux-admin-toolkit">
+  <img src="docs/demo.gif" width="820" alt="Demo browsing the menus">
 </p>
 
-<p align="center">
-  <i>Modular Linux sysadmin toolkit with a TUI: users, groups, firewall, network, monitoring and more.</i>
-</p>
+> The interface is currently in Spanish. An English translation of the menus is on the roadmap.
 
 ---
 
-## Índice
+## Contents
 
-- [Qué hace ahora](#qué-hace-ahora)
-- [Un recorrido por los menús](#un-recorrido-por-los-menús)
-- [Cómo funciona el bloqueo temporal](#cómo-funciona-el-bloqueo-temporal)
-- [En desarrollo](#en-desarrollo)
-- [Requisitos](#requisitos)
-- [Uso](#uso)
-- [Autor](#autor)
+- [Quick start](#quick-start)
+- [What it does](#what-it-does)
+- [A tour of the menus](#a-tour-of-the-menus)
+- [How temporary locks work](#how-temporary-locks-work)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [Author](#author)
 
-## Qué hace ahora
+## Quick start
 
-| Parte | Qué hace |
+```bash
+sudo apt install whiptail
+curl -fsSLO https://raw.githubusercontent.com/RobertMartiB/linux-admin-toolkit/main/GestorSistema.sh && chmod +x GestorSistema.sh && ./GestorSistema.sh
+```
+
+Or clone the repository:
+
+```bash
+git clone https://github.com/RobertMartiB/linux-admin-toolkit.git
+cd linux-admin-toolkit
+./GestorSistema.sh
+```
+
+Requires Linux with **systemd** (built for Debian and Ubuntu), plus `bash`, `whiptail` and `sudo`. Actions that change the system run through `sudo`, so you need an administrator account.
+
+## What it does
+
+| Area | What you can do |
 |---|---|
-| **Usuarios** | Crear, eliminar, listar y cambiar contraseñas, con comprobaciones para no equivocarse. |
-| **Bloqueos** | Bloquear y desbloquear cuentas, para siempre o **durante X días**. |
-| **Sudo** | Ver quién tiene sudo, darlo, quitarlo o crear un usuario que ya lo tenga. |
-| **Interfaz** | Menús con whiptail y un tema de colores propio. |
+| **Users** | Create, delete, list and change passwords, with checks to prevent mistakes. |
+| **Locks** | Lock and unlock accounts, permanently or **for X days**. |
+| **Sudo** | See who has sudo, grant it, revoke it, or create a user that already has it. |
+| **Interface** | whiptail menus with a custom colour theme. |
 
-**Gestión de usuarios**
+**User management**
 
-- **Crear usuarios** con carpeta personal y shell Bash, comprobando que el nombre no exista y que la contraseña tenga al menos 8 caracteres.
-- **Eliminar usuarios** junto con su carpeta personal, con confirmación previa. No deja borrar `root`.
-- **Listar usuarios**: reales (UID ≥ 1000), de sistema (UID < 1000) o todos.
-- **Cambiar contraseñas** de cualquier usuario: comprueba que el usuario exista y pide la nueva contraseña dos veces, sin mostrarla, para evitar errores al escribirla.
-- **Bloquear y desbloquear cuentas**, de forma permanente o **temporal durante X días**.
-  - El bloqueo desactiva la contraseña y caduca la cuenta, así que tampoco se puede entrar por SSH con clave.
-  - No permite bloquear a `root` ni al administrador que está usando la herramienta.
+- **Create users** with a home directory and Bash shell, checking the name is free and the password has at least 8 characters.
+- **Delete users** along with their home directory, after confirmation. `root` can't be deleted.
+- **List users**: real (UID ≥ 1000), system (UID < 1000) or all.
+- **Change passwords**: checks the user exists and asks for the new password twice, hidden.
+- **Lock and unlock accounts**, permanently or **temporarily for X days**.
+  - Locking disables the password and expires the account, so SSH key logins are blocked too.
+  - You can't lock `root` or the administrator running the tool.
 
-**Gestión de `sudoers`**
+**`sudoers` management**
 
-- **Ver qué usuarios tienen sudo** (miembros del grupo `sudo`).
-- **Dar permisos de sudo** a un usuario que ya existe, o **crear un usuario nuevo** directamente con sudo.
-- **Quitar permisos de sudo**, con confirmación previa.
-  - No deja quitar sudo a `root` ni al administrador que está usando la herramienta, para no quedarse sin acceso.
+- **See which users have sudo** (members of the `sudo` group).
+- **Grant sudo** to an existing user, or **create a new user** with sudo straight away.
+- **Revoke sudo**, after confirmation.
+  - You can't revoke sudo from `root` or from the administrator running the tool, so you never lock yourself out.
 
-**Interfaz**
+**Interface**
 
-- Menús con whiptail y tema propio de 256 colores, con un tema alternativo para terminales de 8 colores.
-- Si se lanza con `sh` (dash), se vuelve a ejecutar con `bash` automáticamente.
+- whiptail menus with a custom 256-colour theme, and a fallback theme for 8-colour terminals.
+- If launched with `sh` (dash), it re-runs itself with `bash` automatically.
 
-## Un recorrido por los menús
-
-Desde el menú principal se entra en **Usuarios**, donde están todas las opciones de cuentas.
+## A tour of the menus
 
 <p align="center">
-  <img src="docs/capturas/menu-usuarios.png" width="820" alt="Menú de administración de usuarios">
+  <img src="docs/capturas/menu-usuarios.png" width="820" alt="User management menu">
 </p>
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/capturas/menu-sudoers.png" alt="Menú de gestión de sudoers"></td>
-    <td width="50%"><img src="docs/capturas/menu-bloqueo.png" alt="Menú de bloqueo de usuarios"></td>
+    <td width="50%"><img src="docs/capturas/menu-sudoers.png" alt="Sudoers menu"></td>
+    <td width="50%"><img src="docs/capturas/menu-bloqueo.png" alt="Account lock menu"></td>
   </tr>
   <tr>
-    <td align="center"><b>Gestión de sudoers</b><br>Dar, quitar y listar permisos de sudo.</td>
-    <td align="center"><b>Bloqueo de usuarios</b><br>Temporal durante unos días o permanente.</td>
+    <td align="center"><b>Sudoers</b><br>Grant, revoke and list sudo permissions.</td>
+    <td align="center"><b>Account locks</b><br>Temporary for a few days, or permanent.</td>
   </tr>
 </table>
 
-## Cómo funciona el bloqueo temporal
+## How temporary locks work
 
-En lugar de dejar un `cron` o un `sleep` en marcha, la herramienta programa un **temporizador de systemd** que deshace el cambio solo:
+Instead of leaving a `cron` job or a `sleep` running, the tool schedules a **systemd timer** that undoes the change by itself:
 
 ```bash
-# Bloquear ahora…
+# Lock now…
 sudo usermod -L -e 1 "$Usuario"
 
-# …y programar el desbloqueo pasados X días
+# …and schedule the unlock after X days
 sudo systemd-run --unit="estado-usuario-$Usuario" \
     --on-active="${Dias}d" --timer-property=AccuracySec=1min \
     /usr/sbin/usermod -U -e "" "$Usuario"
 ```
 
-Cada usuario tiene una sola unidad `estado-usuario-<usuario>`. Si se cambia de idea, la herramienta cancela el temporizador pendiente antes de aplicar el nuevo estado.
+Each user has a single `estado-usuario-<user>` unit. If you change your mind, the tool cancels the pending timer before applying the new state.
 
-## En desarrollo
+## Roadmap
 
-- [ ] Editar permisos de usuarios
-- [ ] Gestión de grupos
-- [ ] Monitorización del sistema
+- [ ] Edit user permissions
+- [ ] Group management
+- [ ] System monitoring
 - [ ] Firewall (UFW)
-- [ ] Configuración de red
-- [ ] Servicios y procesos
-- [ ] Paquetes y actualizaciones
-- [ ] Copias de seguridad
-- [ ] Seguridad y auditoría
+- [ ] Network configuration
+- [ ] Services and processes
+- [ ] Packages and updates
+- [ ] Backups
+- [ ] Security and auditing
+- [ ] English translation of the menus
 
-## Requisitos
+## Contributing
 
-- Linux con **systemd**, pensado para Debian y Ubuntu.
-- `bash`, `whiptail` y `sudo`.
+Ideas, bug reports and pull requests are welcome. Issues labelled [`good first issue`](https://github.com/RobertMartiB/linux-admin-toolkit/labels/good%20first%20issue) are a good place to start.
 
-```bash
-sudo apt install whiptail
-```
+## Author
 
-## Uso
-
-```bash
-git clone https://github.com/RobertMartiB/linux-admin-toolkit.git
-cd linux-admin-toolkit
-chmod +x GestorSistema.sh
-./GestorSistema.sh
-```
-
-Las acciones que modifican el sistema usan `sudo`, así que hace falta un usuario con permisos de administrador.
-
-## Autor
-
-**Robert Martí**, técnico de sistemas (CFGS ASIX) y estudiante de Ingeniería Informática en la UOC.
+**Robert Martí**, systems technician (CFGS ASIX) and Computer Engineering student at the UOC.
 
 [LinkedIn](https://www.linkedin.com/in/robert-marti-badia-119710235/) · [Portfolio](https://robertmartib.github.io/portfolio-robert/)
 
-## Licencia
+## License
 
 [MIT](LICENSE)
