@@ -1,17 +1,45 @@
-# linux-admin-toolkit
+<h1 align="center">linux-admin-toolkit</h1>
 
-![Menú principal de linux-admin-toolkit](assets/banner.png)
+<p align="center">
+  <b>Administra un servidor Linux desde menús en la terminal.</b><br>
+  Usuarios, contraseñas, bloqueos y permisos de sudo sin tener que recordar cada comando.
+</p>
 
-![Bash](https://img.shields.io/badge/Bash-4EAA25?logo=gnubash&logoColor=white)
-![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black)
-![Estado](https://img.shields.io/badge/estado-en%20desarrollo-orange)
-![Licencia](https://img.shields.io/badge/licencia-MIT-blue)
+<p align="center">
+  <img src="https://img.shields.io/badge/Bash-4EAA25?logo=gnubash&logoColor=white" alt="Bash">
+  <img src="https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black" alt="Linux">
+  <img src="https://img.shields.io/badge/estado-en%20desarrollo-orange" alt="Estado">
+  <img src="https://img.shields.io/badge/licencia-MIT-blue" alt="Licencia">
+</p>
 
-Herramienta en **Bash** para administrar servidores Linux desde **menús en la terminal** (whiptail), sin tener que recordar cada comando.
+<p align="center">
+  <img src="assets/banner.png" width="820" alt="Menú principal de linux-admin-toolkit">
+</p>
 
-*Modular Linux sysadmin toolkit with a TUI: users, groups, firewall, network, monitoring and more.*
+<p align="center">
+  <i>Modular Linux sysadmin toolkit with a TUI: users, groups, firewall, network, monitoring and more.</i>
+</p>
+
+---
+
+## Índice
+
+- [Qué hace ahora](#qué-hace-ahora)
+- [Un recorrido por los menús](#un-recorrido-por-los-menús)
+- [Cómo funciona el bloqueo temporal](#cómo-funciona-el-bloqueo-temporal)
+- [En desarrollo](#en-desarrollo)
+- [Requisitos](#requisitos)
+- [Uso](#uso)
+- [Autor](#autor)
 
 ## Qué hace ahora
+
+| Parte | Qué hace |
+|---|---|
+| **Usuarios** | Crear, eliminar, listar y cambiar contraseñas, con comprobaciones para no equivocarse. |
+| **Bloqueos** | Bloquear y desbloquear cuentas, para siempre o **durante X días**. |
+| **Sudo** | Ver quién tiene sudo, darlo, quitarlo o crear un usuario que ya lo tenga. |
+| **Interfaz** | Menús con whiptail y un tema de colores propio. |
 
 **Gestión de usuarios**
 
@@ -34,6 +62,25 @@ Herramienta en **Bash** para administrar servidores Linux desde **menús en la t
 
 - Menús con whiptail y tema propio de 256 colores, con un tema alternativo para terminales de 8 colores.
 - Si se lanza con `sh` (dash), se vuelve a ejecutar con `bash` automáticamente.
+
+## Un recorrido por los menús
+
+Desde el menú principal se entra en **Usuarios**, donde están todas las opciones de cuentas.
+
+<p align="center">
+  <img src="docs/capturas/menu-usuarios.png" width="820" alt="Menú de administración de usuarios">
+</p>
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/capturas/menu-sudoers.png" alt="Menú de gestión de sudoers"></td>
+    <td width="50%"><img src="docs/capturas/menu-bloqueo.png" alt="Menú de bloqueo de usuarios"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Gestión de sudoers</b><br>Dar, quitar y listar permisos de sudo.</td>
+    <td align="center"><b>Bloqueo de usuarios</b><br>Temporal durante unos días o permanente.</td>
+  </tr>
+</table>
 
 ## Cómo funciona el bloqueo temporal
 
