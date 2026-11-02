@@ -656,6 +656,24 @@ MenuUsuarios() {
 }
 
 
+#==============================================
+#  GRUPOS
+#=============================================
+
+MenuGrupos(){
+	while true; do 
+	    opcion=$(whiptail --title "Menu administracion de grupos" \
+		--menu "Escoje una de las siguientes opciones" 25 78 15 \
+		
+
+)
+}
+
+
+
+
+
+
 # ══════════════════════════════════════════════
 #   MENÚ PRINCIPAL
 # ══════════════════════════════════════════════
